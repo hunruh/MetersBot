@@ -1,0 +1,28 @@
+{
+  "name": "meters-bot",
+  "version": "0.0.1",
+  "description": "Automatically records meters via SMS during the million meters challenge.",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "cron": "^1.0.9",
+    "express": "^4.13.3",
+    "twilio": "^2.5.1",
+    "firebase": "^2.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MPWhite/MetersBot.git"
+  },
+  "author": "Ttam White",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MPWhite/MetersBot/issues"
+  },
+  "homepage": "https://github.com/MPWhite/MetersBot#readme"
+}
