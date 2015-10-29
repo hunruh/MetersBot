@@ -52,6 +52,10 @@ var server = app.listen(process.env.PORT || 3000, function() {
 });
 
 
+function bodyDecode(message){
+
+}
+
 function addToSheet(i, j, x){
 	spreadsheet.load({
 	    debug: true,
@@ -74,6 +78,50 @@ function addToSheet(i, j, x){
 	    });
 
 	});
+}
+
+//used to parse incoming messages and generate meaningful commands
+filterInt = function (value) {
+  if(/^(\-|\+)?([0-9]+|Infinity)$/.test(value))
+    return Number(value);
+  return NaN;
+}
+
+function bodyParse(message){
+    var patt = new RegExp("[0-9]*k");
+	var parsed = message.split(" ");
+	
+	//single word command (stats, add, or clear)
+	if (parsed.length == 1){
+
+		//message is a stats command
+	    if(message == "stats"){
+	        return ["stats","user"];
+	    }
+
+	    //cleae
+	    if(message == "stats"){
+	        return ["clear","0"];
+	    }
+
+	    // add comand using "k" notation 
+	    if(patt.test(parsed[0])){
+	        var dist = parsed[0].replace('k','000');
+	        return ["add",dist];
+	    }
+
+	    // add command using strict notation 
+	    if(!isNaN(filterInt(parsed[0]))){
+	        return ["add",message];
+	    }
+
+	    //error 
+	    else{
+	        return ["error"];
+	    }
+	}
+	
+	return parsed;
 }
 
 var identity_map = {
