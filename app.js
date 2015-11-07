@@ -11,9 +11,6 @@ app.use(bodyParser.urlencoded({
  
 var spreadsheet = require('edit-google-spreadsheet');
 
-
-
-
 var kerberisms = [
 	"Be the human adjustment.",
 	"Be the human adjustment.",
@@ -32,17 +29,16 @@ app.post('/', function (req, res) {
   var resp = new twilio.TwimlResponse();
   var fromNum = req.body.From.replace("+","");
   var body =  req.body.Body.toLowerCase();
-  var i = Math.floor((Math.random() * 4));
   console.log(fromNum);
 
   //Parse the received message
   exe = messageParse(body)
-
+  console.log('exe');
   //Execution
-  execute(exe);
+  retBody = execute(fromNum, exe);
 
   //Creating the message to be sent back
-  resp.message("You must be: " + identity_map[fromNum] + ". " + kerberisms[i]);
+  resp.message(retBody);
   //Send the message back to the orignal sender 
   res.writeHead(200, {
     'Content-Type':'text/xml'
@@ -61,24 +57,31 @@ var server = app.listen(process.env.PORT || 3000, function() {
 });
 
 
-
-//used to parse incoming messages and generate meaningful commands
-filterInt = function (value) {
-  if(/^(\-|\+)?([0-9]+|Infinity)$/.test(value))
-    return Number(value);
-  return NaN;
+filterInt = function (value) { 
+  if(/^(\-|\+)?([0-9]+|Infinity)$/.test(value)){
+     return Number(value); 
+  }
+   return NaN; 
 }
 
+//used to parse incoming messages and generate meaningful commands
 function messageParse(message){
-    var patt = new RegExp("[0-9]*k");
+    
+    message = message.toLowerCase();
+    message = message.trim();
+    message = message.replace(/\s\s+/g, ' ');
+    
+    var patt = new RegExp("[0-9]+k?");
 	var parsed = message.split(" ");
+
+    
 	
 	//single word command (stats, add, or clear)
 	if (parsed.length == 1){
 
 		//message is a stats command
-	    if(message == "stats"){
-	        return ["stats","user"];
+	    if(message == "stats" || message == "stat"){
+	        return ["stats"];
 	    }
 
 	    //clear
@@ -89,6 +92,10 @@ function messageParse(message){
 	    // add comand using "k" notation 
 	    if(patt.test(parsed[0])){
 	        var dist = parsed[0].replace('k','000');
+	        if(isNaN(filterInt(dist)))
+	        {
+	            return(['error']);
+	        }
 	        return ["add",dist];
 	    }
 
@@ -96,49 +103,67 @@ function messageParse(message){
 	    if(!isNaN(filterInt(parsed[0]))){
 	        return ["add",message];
 	    }
-
-	    //error 
-	    else{
-	        return ["error"];
-	    }
 	}
 
-	if (parsed.length == 1){
-
+	if (parsed.length == 2){
+		//stats
+		if  (parsed[0] == "stats" || parsed[0] == "stat"){
+            num = lastName2Num[parsed[1]];
+            if (isNaN(num)){
+                return ['error'];
+            }
+            return ["stats",num];
+		}
 		//biking
+
+		if  (parsed[0] == "bike"){
+            time = parsed[1].replace("min","");
+            dist = parseInt(time) * 200;
+            return messageParse(String(dist));
+		}
 		//tanking 
+		if  (parsed[0] == "tank"){
+            time = parsed[1].replace("min","");
+            dist = parseInt(time) * 240;
+            return messageParse(String(dist));
+		}
 		//running 
+		if  (parsed[0] == "run"){
+            time = parsed[1].replace("min","");
+            dist = parseInt(time) * 240;
+            return messageParse(String(dist));
+		}
 	};
 	
-	return parsed;
+	return ["error"]
 }
 
 
-function execute(exe){
+function execute(user, exe){
 	//add command 
 	if(exe[0] == 'add'){
-		add(exe[1]);
-		return 'success';
+		ret = add(user, exe[1]);
+		return ret;
 	}
 	//write command
 	if(exe[0] == 'write'){
-		write(exe[1]);
+		write(user, exe[1]);
 		return 'success';
 	}
 	//stats command 
 	if(exe[0] == 'stats'){
-		stats(exe[1]);
+		stats(user, exe[1]);
 		return 'success';
 	}
 	//error 
 	if(exe[0] == 'error'){
-		
+		return 'error';
 	}
 }
 
 //add function 
-function add(arg){
-	spreadsheet.load({
+function add(user,arg){
+	ret = spreadsheet.load({
 	    debug: true,
 	    spreadsheetId: '1IkSevctmMuBge3ORcrp_LAvnaFX9ssel_JsUHdbWGcA',
 	    worksheetId: 'od6',
@@ -152,21 +177,22 @@ function add(arg){
 
 	    if (err) throw err;
 
-	    spreadsheet.receive(function(err, rows, info) {
+	    innerRet = spreadsheet.receive(function(err, rows, info) {
 	    	if(err) throw err;
-	      	rowNum = findRow(17049999791,rows);
+	      	rowNum = findRow(user,rows);
 	      	colNum = findCol();
 
 	      	//getting the current value 
 	      	val = parseInt(rows[rowNum][colNum]);
 
 	      	if(isNaN(val)){
-	      		val = 0; 
+	      		val = 0;  
 	      	}
 
 	      	console.log(arg);
 	      	arg = parseInt(arg) + val;
 	      	console.log(arg);
+
 
 	 	 	//creating what will be sent 
 
@@ -183,12 +209,21 @@ function add(arg){
 	      	spreadsheet.send(function(err) {
 	     	 	if(err) throw err;
 	      	});
+
+	      	return "ADD WORKED";
 	    });
+
+	    return "innerRet"
 	});
+
+	if (arg <= 5000) 
+	var snip = (arg <= 5000) ? "Is that even enough meters to consider it a workout?" : " ";
+	var prod = (arg > 20000) ? "Over 20k? Someone's a big fucking deal" : " ";
+	return snip + " I added " + String(arg) + " meters to your daily total. " + prod; 
 }
 
 //write function
-function write(arg){
+function write(user, arg){
 	spreadsheet.load({
 	    debug: true,
 	    spreadsheetId: '1IkSevctmMuBge3ORcrp_LAvnaFX9ssel_JsUHdbWGcA',
@@ -205,8 +240,7 @@ function write(arg){
 
 	    spreadsheet.receive(function(err, rows, info) {
 	    	if(err) throw err;
-	    	console.log(rows);
-	      	rowNum = findRow(17049999791,rows);
+	      	rowNum = findRow(user,rows);
 	      	colNum = findCol();
 
 
@@ -239,7 +273,7 @@ function stats(arg){
 
 function findRow(number, rows){
 	for (var key in rows){
-		if(rows[key][1] == number){
+		if(rows[key][2] == number){
 			return parseInt(key); 
 		}
 	};
@@ -255,135 +289,202 @@ function findCol(){
 }
 
 var identity_map = {
-	'+17204700939' : 'Adam Tavel',
-	'+18457415780' : 'Alan Held',
-	'+14692585797' : 'Alex Chang',
-	'+17817998788' : 'Alex LaViolette',
-	'+12066604215' : 'Andrew Broom',
-	'+14438678954' : 'Andrew Thomas',
-	'+14693210006' : 'Andy Kim',
-	'+16092343421' : 'Ben Gassaway',
-	'+16073424575' : 'Bill Brumsted',
-	'+12533304875' : 'Brynn Munday',
-	'+18606725827' : 'Callie Carew-Miller',
-	'+17039556736' : 'Cameron Schultz',
-	'+15165877410' : 'Carl Finkbeiner',
-	'+17326145244' : 'Chris Mayro',
-	'+17085673221' : 'Christ Dineff',
-	'+12072729861' : 'Christopher Kerber',
-	'+14126522887' : 'Connor Hayes',
-	'+17044883861' : 'Conor Jones',
-	'+15187648929' : 'Danny Janeczko',
-	'+16316552811' : 'Danny O\'Neill',
-	'+19086982342' : 'Ed Bao',
-	'+17753035556' : 'Erik Johnson',
-	'+19186063232' : 'Gabrielle Steinl',
-	'+15188218234' : 'Hannah Cashen',
-	'+18012449440' : 'Harrison Unruh',
-	'+16072806062' : 'Henry Ellis',
-	'+15165927321' : 'Ian Sigal',
-	'+17819279838' : 'Jack Evitts',
-	'+18589453793' : 'Jack Piegza',
-	'+16177104466' : 'Jack Ruske',
-	'+18588298363' : 'Jake Morrison',
-	'+12037310783' : 'Jake Snyder',
-	'+16105853672' : 'James McManus',
-	'+16122478571' : 'Joe Hassler',
-	'+12679072554' : 'Joe Pinnola-Vizza',
-	'+12818652555' : 'Johnnie Sinclair',
-	'+17738964413' : 'Lukasz Rzycki',
-	'+18457022769' : 'Luke Sendelbach',
-	'+13055885040' : 'Manny Sanchez',
-	'+12623574715' : 'Marco Bustamante',
-	'+17049999791' : 'Matt White',
-	'+17329968109' : 'Maxx McClelland',
-	'+15858312246' : 'Molly Rochford',
-	'+17168640330' : 'Michael Battaglia',
-	'+14012191176' : 'Nathan Lambert',
-	'+17135012181' : 'Nick Anderson',
-	'+17817081121' : 'Nigel Harriman',
-	'+19017363880' : 'Olav Imsdahl',
-	'+17322413445' : 'Paul Clauss',
-	'+19139408877' : 'Peter Shelton',
-	'+12037278113' : 'Peter Solazzo',
-	'+15087336749' : 'Reid Williamson',
-	'+16077938332' : 'Rori Henderson',
-	'+12067241787' : 'Rowan Callahan',
-	'+15167329495' : 'Ryan Peters',
-	'+12039188738' : 'Trevor Frey',
-	'+17818794455' : 'Trevor Kahl',
-	'+18572948734' : 'Victor Ordóñez',
-	'+15167495433' : 'Will Oprea'
+	'17204700939' : 'Adam Tavel',
+	'18457415780' : 'Alan Held',
+	'14692585797' : 'Alex Chang',
+	'17817998788' : 'Alex LaViolette',
+	'12066604215' : 'Andrew Broom',
+	'14438678954' : 'Andrew Thomas',
+	'14693210006' : 'Andy Kim',
+	'16092343421' : 'Ben Gassaway',
+	'16073424575' : 'Bill Brumsted',
+	'12533304875' : 'Brynn Munday',
+	'18606725827' : 'Callie Carew-Miller',
+	'17039556736' : 'Cameron Schultz',
+	'15165877410' : 'Carl Finkbeiner',
+	'17326145244' : 'Chris Mayro',
+	'17085673221' : 'Christ Dineff',
+	'12072729861' : 'Christopher Kerber',
+	'14126522887' : 'Connor Hayes',
+	'17044883861' : 'Conor Jones',
+	'15187648929' : 'Danny Janeczko',
+	'16316552811' : 'Danny O\'Neill',
+	'19086982342' : 'Ed Bao',
+	'17753035556' : 'Erik Johnson',
+	'19186063232' : 'Gabrielle Steinl',
+	'15188218234' : 'Hannah Cashen',
+	'18012449440' : 'Harrison Unruh',
+	'16072806062' : 'Henry Ellis',
+	'15165927321' : 'Ian Sigal',
+	'17819279838' : 'Jack Evitts',
+	'18589453793' : 'Jack Piegza',
+	'16177104466' : 'Jack Ruske',
+	'18588298363' : 'Jake Morrison',
+	'12037310783' : 'Jake Snyder',
+	'16105853672' : 'James McManus',
+	'16122478571' : 'Joe Hassler',
+	'12679072554' : 'Joe Pinnola-Vizza',
+	'12818652555' : 'Johnnie Sinclair',
+	'17738964413' : 'Lukasz Rzycki',
+	'18457022769' : 'Luke Sendelbach',
+	'13055885040' : 'Manny Sanchez',
+	'12623574715' : 'Marco Bustamante',
+	'17049999791' : 'Matt White',
+	'17329968109' : 'Maxx McClelland',
+	'15858312246' : 'Molly Rochford',
+	'17168640330' : 'Michael Battaglia',
+	'14012191176' : 'Nathan Lambert',
+	'17135012181' : 'Nick Anderson',
+	'17817081121' : 'Nigel Harriman',
+	'19017363880' : 'Olav Imsdahl',
+	'17322413445' : 'Paul Clauss',
+	'19139408877' : 'Peter Shelton',
+	'12037278113' : 'Peter Solazzo',
+	'15087336749' : 'Reid Williamson',
+	'16077938332' : 'Rori Henderson',
+	'12067241787' : 'Rowan Callahan',
+	'15167329495' : 'Ryan Peters',
+	'12039188738' : 'Trevor Frey',
+	'17818794455' : 'Trevor Kahl',
+	'18572948734' : 'Victor Ordóñez',
+	'15167495433' : 'Will Oprea'
 };
 
+var lastName2Num = {
+	'harriman' : '+17817081121',
+	'williamson' : '+15087336749',
+	'ruske' : '+16177104466',
+	'evitts' : '+17819279838',
+	'ordonez' : '+18572948734',
+	'monica ordonez' : '+18572948737',
+	'laviolette' : '+17817998788',
+	'richartz' : '+18603913834',
+	'frey' : '+12039188738',
+	'solazzo' : '+12037278113',
+	'carew-miller' : '+18606725827',
+	'snyder' : '+12037310783',
+	'sofair' : '+12038230110',
+	'lambert' : '+14012191176',
+	'o\'neill' : '+16316552811',
+	'oprea' : '+15167495433',
+	'finkbeiner' : '+15165877410',
+	'peters' : '+15167329495',
+	'sigal' : '+15165927321',
+	'sourial' : '+15166508498',
+	'cashen' : '+15188218234',
+	'ellis' : '+16072806062',
+	'held' : '+18457415780',
+	'janeczko' : '+15187648929',
+	'sendelbach' : '+18457022769',
+	'henderson' : '+16077938332',
+	'rochford' : '+15858312246',
+	'szegletes' : '+12014033213',
+	'battaglia' : '+17168640330',
+	'clauss' : '+17322413445',
+	'mayro' : '+17326145244',
+	'gassaway' : '+16092343421',
+	'royer' : '+19738006498',
+	'hayes' : '+14126522887',
+	'pinnola-vizza' : '+12679072554',
+	'keiper' : '+12672728352',
+	'mcmanus' : '+16105853672',
+	'bao' : '+19086982342',
+	'sanchez' : '+13055885040',
+	'schultz' : '+17039556736',
+	'jones' : '+17044883861',
+	'kim' : '+14693210006',
+	'chang' : '+14692585797',
+	'sinclair' : '+12818652555',
+	'anderson' : '+17135012181',
+	'shelton' : '+19139408877',
+	'dineff' : '+17085673221',
+	'steinl' : '+19186063232',
+	'bustamante' : '+12623574715',
+	'hassler' : '+16122478571',
+	'lecorgne' : '+16143072426',
+	'ryzcki' : '+17738964413',
+	'tavel' : '+17204700939',
+	'johnson' : '+17753035556',
+	'giannini' : '+14158528816',
+	'unruh' : '+18012449440',
+	'thomas' : '+14438678954',
+	'piegza' : '+18589453793',
+	'murphy' : '+13039066240',
+	'munday' : '+12533304875',
+	'white' : '+17049999791',
+	'imsdahl' : '+19017363880',
+	'callahan' : '+12067241787',
+	'broom' : '+12066604215'
+}
+
 var colMap = {
-	'Nov 04' : 4,
-	'Nov 05' : 4,
-	'Nov 06' : 4,
-	'Nov 07' : 4,
-	'Nov 08' : 4,
-    'Nov 09' : 5,
-	'Nov 10' : 6,
-	'Nov 11' : 7,
-	'Nov 12' : 8,
-	'Nov 13' : 9,
-	'Nov 14' : 10,
-	'Nov 15' : 11,
-	'Nov 16' : 12,
-	'Nov 17' : 13,
-	'Nov 18' : 14,
-	'Nov 19' : 15,
-	'Nov 20' : 16,
-	'Nov 21' : 17,
-	'Nov 22' : 18,
-	'Nov 23' : 19,
-	'Nov 24' : 20,
-	'Nov 25' : 21,
-	'Nov 26' : 22,
-	'Nov 27' : 23,
-	'Nov 28' : 24,
-	'Nov 29' : 25,
-	'Nov 30' : 26,
-	'Dec 01' : 27,
-	'Dec 02' : 28,
-	'Dec 03' : 29,
-	'Dec 04' : 30,
-	'Dec 05' : 31,
-	'Dec 06' : 32,
-	'Dec 07' : 33,
-	'Dec 08' : 34,
-	'Dec 09' : 35,
-	'Dec 10' : 36,
-	'Dec 11' : 37,
-	'Dec 12' : 38,
-	'Dec 13' : 39,
-	'Dec 14' : 40,
-	'Dec 15' : 41,
-	'Dec 16' : 42,
-	'Dec 17' : 43,
-	'Dec 18' : 44,
-	'Dec 19' : 45,
-	'Dec 20' : 46,
-	'Dec 21' : 47,
-	'Dec 22' : 48,
-	'Dec 23' : 49,
-	'Dec 24' : 50,
-	'Dec 25' : 51,
-	'Dec 26' : 52,
-	'Dec 27' : 53,
-	'Dec 28' : 54,
-	'Dec 29' : 55,
-	'Dec 30' : 56,
-	'Dec 31' : 57,
-	'Jan 01' : 58,
-	'Jan 02' : 59,
-	'Jan 03' : 60,
-	'Jan 04' : 61,
-	'Jan 05' : 62,
-	'Jan 06' : 63,
-	'Jan 07' : 64,
-	'Jan 08' : 65,
-	'Jan 09' : 66
+	'Nov 04' : 5,
+	'Nov 05' : 5,
+	'Nov 06' : 5,
+	'Nov 07' : 5,
+	'Nov 08' : 5,
+    'Nov 09' : 6,
+	'Nov 10' : 7,
+	'Nov 11' : 8,
+	'Nov 12' : 9,
+	'Nov 13' : 10,
+	'Nov 14' : 11,
+	'Nov 15' : 12,
+	'Nov 16' : 13,
+	'Nov 17' : 14,
+	'Nov 18' : 15,
+	'Nov 19' : 16,
+	'Nov 20' : 17,
+	'Nov 21' : 18,
+	'Nov 22' : 19,
+	'Nov 23' : 20,
+	'Nov 24' : 21,
+	'Nov 25' : 22,
+	'Nov 26' : 23,
+	'Nov 27' : 24,
+	'Nov 28' : 25,
+	'Nov 29' : 26,
+	'Nov 30' : 27,
+	'Dec 01' : 28,
+	'Dec 02' : 29,
+	'Dec 03' : 30,
+	'Dec 04' : 31,
+	'Dec 05' : 32,
+	'Dec 06' : 33,
+	'Dec 07' : 34,
+	'Dec 08' : 35,
+	'Dec 09' : 36,
+	'Dec 10' : 37,
+	'Dec 11' : 38,
+	'Dec 12' : 39,
+	'Dec 13' : 40,
+	'Dec 14' : 41,
+	'Dec 15' : 42,
+	'Dec 16' : 43,
+	'Dec 17' : 44,
+	'Dec 18' : 45,
+	'Dec 19' : 46,
+	'Dec 20' : 47,
+	'Dec 21' : 48,
+	'Dec 22' : 49,
+	'Dec 23' : 50,
+	'Dec 24' : 51,
+	'Dec 25' : 52,
+	'Dec 26' : 53,
+	'Dec 27' : 54,
+	'Dec 28' : 55,
+	'Dec 29' : 56,
+	'Dec 30' : 57,
+	'Dec 31' : 58,
+	'Jan 01' : 59,
+	'Jan 02' : 60,
+	'Jan 03' : 61,
+	'Jan 04' : 62,
+	'Jan 05' : 63,
+	'Jan 06' : 64,
+	'Jan 07' : 65,
+	'Jan 08' : 66,
+	'Jan 09' : 67
 }
 
 
