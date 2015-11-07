@@ -19,6 +19,18 @@ var kerberisms = [
 	"Pull harder"
 ];
 
+
+var under5 = [
+	"Some say that anything less than 20 minutes shouldn't count as a workout.",
+	"Less than 5k? Are you sure that's worth adding?",
+	"You think that's enough to get you to the million?",
+	"Next time try aiming for something north of 5k",
+	"I'm not even human and I know that's not enough rowing",
+	"Harvard isn't taking days off.",
+	"Pete Solazzo already did more meters than you.",
+	"I'm going to stop responding to you if you keep logging less than 5k."
+]
+
 var creds = require('./google-creds.json');
 
 app.post('/', function (req, res) {
@@ -148,22 +160,22 @@ function execute(user, exe){
 	//write command
 	if(exe[0] == 'write'){
 		write(user, exe[1]);
-		return 'success';
+		return 'Your meters for today have been set to 0';
 	}
 	//stats command 
 	if(exe[0] == 'stats'){
 		stats(user, exe[1]);
-		return 'success';
+		return 'stats is not currently implemented. Yell at Matt to fix it.';
 	}
 	//error 
 	if(exe[0] == 'error'){
-		return 'error';
+		return 'I did not understand that... type help for a list of supported commands';
 	}
 }
 
 //add function 
 function add(user,arg){
-	ret = spreadsheet.load({
+	spreadsheet.load({
 	    debug: true,
 	    spreadsheetId: '1IkSevctmMuBge3ORcrp_LAvnaFX9ssel_JsUHdbWGcA',
 	    worksheetId: 'od6',
@@ -177,7 +189,7 @@ function add(user,arg){
 
 	    if (err) throw err;
 
-	    innerRet = spreadsheet.receive(function(err, rows, info) {
+	    spreadsheet.receive(function(err, rows, info) {
 	    	if(err) throw err;
 	      	rowNum = findRow(user,rows);
 	      	colNum = findCol();
@@ -209,17 +221,18 @@ function add(user,arg){
 	      	spreadsheet.send(function(err) {
 	     	 	if(err) throw err;
 	      	});
-
-	      	return "ADD WORKED";
+	  
 	    });
-
-	    return "innerRet"
+	    
 	});
 
-	if (arg <= 5000) 
-	var snip = (arg <= 5000) ? "Is that even enough meters to consider it a workout?" : " ";
-	var prod = (arg > 20000) ? "Over 20k? Someone's a big fucking deal" : " ";
-	return snip + " I added " + String(arg) + " meters to your daily total. " + prod; 
+	if (arg < 5000){
+		var i = Math.floor(Math.random()*under5.length);
+		return (under5[i] + "I successfully logged your " + String(arg) + " meters");
+	}
+	return ("I successfully logged your " + String(arg) + " meters");
+
+
 }
 
 //write function
@@ -487,32 +500,3 @@ var colMap = {
 	'Jan 09' : 67
 }
 
-
-//spreadsheet.load({
-//	    debug: true,
-//	    spreadsheetId: '1IkSevctmMuBge3ORcrp_LAvnaFX9ssel_JsUHdbWGcA',
-//	    worksheetName: 'Meters',
-//
-//	    oauth : {
-//	        email: '28228689032-cigacjpu3j12joi32l71d1e0q1vt60kk@developer.gserviceaccount.com',
-//	        keyFile: 'keys.pem'
-//	    }
-//
-//	}, function sheetReady(err, spreadsheet) {
-//
-//	    if (err) throw err;
-//
-//	    spreadsheet.receive(function(err, rows, info) {
-//	    if(err) throw err;
-//	      tmp = findRow(17049999791,rows);
-//	      console.log(tmp);
-///	    });
-//
-//	 
-//	    spreadsheet.add({ 10: { 10: 42} });
-//
-//	    spreadsheet.send(function(err) {
-//	    if(err) throw err;
-//	    });
-//
-//	});
