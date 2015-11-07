@@ -21,14 +21,14 @@ var kerberisms = [
 
 
 var under5 = [
-	"Some say that anything less than 20 minutes shouldn't count as a workout.",
-	"Less than 5k? Are you sure that's worth adding?",
-	"You think that's enough to get you to the million?",
-	"Next time try aiming for something north of 5k",
-	"I'm not even human and I know that's not enough rowing",
-	"Harvard isn't taking days off.",
-	"Pete Solazzo already did more meters than you.",
-	"I'm going to stop responding to you if you keep logging less than 5k."
+	"Some say that anything less than 20 minutes shouldn't count as a workout. ",
+	"Less than 5k? Are you sure that's worth adding? ",
+	"You think that's enough to get you to the million? ",
+	"Next time try aiming for something north of 5k. ",
+	"I'm not even human and I know that's not enough rowing. ",
+	"Harvard isn't taking days off. ",
+	"Pete Solazzo already did more meters than you. ",
+	"I'm going to stop responding to you if you keep logging less than 5k. "
 ]
 
 var creds = require('./google-creds.json');
@@ -165,11 +165,11 @@ function execute(user, exe){
 	//stats command 
 	if(exe[0] == 'stats'){
 		stats(user, exe[1]);
-		return 'stats is not currently implemented. Yell at Matt to fix it.';
+		return 'Stats is not currently implemented. Yell at Matt to fix it.';
 	}
 	//error 
 	if(exe[0] == 'error'){
-		return 'I did not understand that... type help for a list of supported commands';
+		return "I didn't understand that. Check the google-doc for instructions, or simply text me the number or meters you would like me to log."
 	}
 }
 
