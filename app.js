@@ -25,10 +25,23 @@ var under5 = [
 	"Less than 5k? Are you sure that's worth adding? ",
 	"You think that's enough to get you to the million? ",
 	"Next time try aiming for something north of 5k. ",
-	"I'm not even human and I know that's not enough rowing. ",
+	"Christ has more chill than you have pull (on the erg, but also with girls). ",
 	"Harvard isn't taking days off. ",
 	"Pete Solazzo already did more meters than you. ",
-	"I'm going to stop responding to you if you keep logging less than 5k. "
+	"I'm going to stop responding to you if you keep logging less than 5k. ",
+	"Would Matt Rung be proud of that? ",
+	"I know for a fact Kelly Albanir's splits are faster than that. ",
+	"You think that's enough meters? I forwarded your transfer app to Dartmouth for you. ",
+	"The other day Mav ran 22 miles and you think this is enough? ",
+	"Chasity Royer got up at 5am this morning to log meters and this is the best you can do? "
+]
+
+var personalResp = [
+	"One time Trevor shit all over the second floor of 503. ",
+	"Danny J and Claire had anal sex. ",
+	"Alex LaViolette had group sex with Andreas. ",
+	"Sometimes I hear Lambo's bed shake when he jerks off late at night.",
+	"Is that video of Olav on the 502 couch still around? "
 ]
 
 var creds = require('./google-creds.json');
@@ -225,6 +238,11 @@ function add(user,arg){
 	    });
 	    
 	});
+
+	if (user = "15187648929" || user = "17753035556" || user = "17817998788" || user = "12039188738" || user = "17049999791"){
+		var i = Math.floor(Math.random()*personalResp.length);
+		return (personalResp[i] + "I successfully logged your " + String(arg) + " meters");
+	}
 
 	if (arg < 5000){
 		var i = Math.floor(Math.random()*under5.length);
