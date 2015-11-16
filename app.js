@@ -239,7 +239,7 @@ function add(user,arg){
 	    
 	});
 
-	if (user = "15187648929" || user = "17753035556" || user = "17817998788" || user = "12039188738" || user = "17049999791"){
+	if (user == "15187648929" || user == "17753035556" || user == "17817998788" || user == "12039188738" || user == "17049999791"){
 		var i = Math.floor(Math.random()*personalResp.length);
 		return (personalResp[i] + "I successfully logged your " + String(arg) + " meters");
 	}
