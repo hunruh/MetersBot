@@ -63,11 +63,14 @@ app.post('/', function (req, res) {
   retBody = execute(fromNum, exe);
 
   //Creating the message to be sent back
-  resp.message(retBody);
+ 
 
   if (user == "15187648929" || user == "17753035556" || user == "17817998788" || user == "12039188738" || user == "17049999791"){
-		resp.media('http://i.imgur.com/RKchYn7.jpg');	
-	}
+	resp.message.media("http://imgur.com/gallery/CqxFr");
+  }
+  else{
+  	resp.message(retBody);
+  }
   //Send the message back to the orignal sender 
   res.writeHead(200, {
     'Content-Type':'text/xml'
