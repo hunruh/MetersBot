@@ -23,7 +23,8 @@
   "author": "Ttam White",
   "license": "ISC",
   "engines": {
-    "node": "4.5.0"
+    "node": "4.5.0",
+    "npm" : "2.15.0"
   },
   "bugs": {
     "url": "https://github.com/MPWhite/MetersBot/issues"
