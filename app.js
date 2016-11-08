@@ -366,6 +366,7 @@ var identity_map = {
 	 '+14438678954' : 'thomas' ,
 	 '+18012449440' : 'unruh' ,
 	 '+17049999791' : 'white' ,
+	 '+16073424575' : 'brumsted'
 };
 
 var lastName2Num = {
@@ -425,7 +426,8 @@ var lastName2Num = {
 	'tavel' : '+17204700939',
 	'thomas' : '+14438678954',
 	'unruh' : '+18012449440',
-	'white' : '+17049999791'
+	'white' : '+17049999791',
+	'brumsted' : '+16073424575'
 }
 
 var colMap = {
