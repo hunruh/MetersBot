@@ -1,1 +1,3 @@
 node_modules
+.gcloudignore
+google-creds.json
