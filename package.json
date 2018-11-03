@@ -4,12 +4,10 @@
   "description": "Automatically records meters via SMS during the million meters challenge.",
   "main": "app.js",
   "dependencies": {
-    "aws4": "^1.5.0",
     "body-parser": "^1.14.1",
     "cron": "^1.0.9",
-    "edit-google-spreadsheet": "^0.2.21",
     "express": "^4.13.3",
-    "firebase": "^2.3.1",
+    "googleapis": "^27.0.0",
     "twilio": "^2.5.1"
   },
   "devDependencies": {},
