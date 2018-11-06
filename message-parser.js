@@ -48,16 +48,12 @@ function messageParse(message){
 		if (parsedMessage[0] == 'cross'){
 			const heartRate = parseFloat(parsedMessage[1]); 
 			const duration = parsedMessage[2].replace('min','');
-			if(heartRate >= 65 && heartRate < 75) {
-				const equivalentDistance = parseInt(parseInt(duration) * 240); 
+			if(heartRate < 75) {
+				const equivalentDistance = parseInt(parseInt(duration) * 166); 
 				return messageParse(String(equivalentDistance));
 			}
-			else if(heartRate >= 75 && heartRate < 85) {
-				const equivalentDistance = parseInt(parseInt(duration) * 250);
-				return messageParse(String(equivalentDistance));
-			}
-		    else if(heartRate >= 85) {
-				const equivalentDistance = parseInt(parseInt(duration) * 285.714);
+			else {
+				const equivalentDistance = parseInt(parseInt(duration) * 200);
 				return messageParse(String(equivalentDistance));
 			}
 		}
