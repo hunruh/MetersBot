@@ -17,9 +17,9 @@ const jwtClient = new google.auth.JWT(
  * Get the column in the spreadsheet correlating to the current date
  */
 function findCol() {
-	date = Date();
-	date = date.substring(4,10);
-	return(colMap[date]);
+	const date = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+	const dateSr = date.split(',')[0];
+	return(colMap[dateSr]);
 }
 
 /**
@@ -30,8 +30,8 @@ function findCol() {
 getCellLocation = function(phoneNumber, callback) {
 	jwtClient.authorize((authErr) => {
 		if (authErr) {
-		  console.log(authErr);
-		  return;
+			console.log(authErr);
+			return;
 		}
 
 		const sheets = google.sheets({version: 'v4'});
@@ -40,25 +40,25 @@ getCellLocation = function(phoneNumber, callback) {
 			spreadsheetId: '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4',
 			range: 'Meters!B8:B48'
 		}, (err, res) => {
-			if (err) return console.log('The API returned an error: ' + err);
+			if (err) return err;
 
 			const rows = res.data.values;
 			if (rows.length) {
-				for (var key in rows){
+				for (var key in rows) {
 					if(rows[key][0] == phoneNumber) {
 						// First row is number 8
 						const rowId = (parseInt(key) + 8).toString();
 						const columnId = findCol();
 						if (!columnId || !rowId) {
-							console.log('Cell not found for phone number: ' + phoneNumber);
-							return;
+							return 'Error: Could not find a cell for that phone number and date in the spreadsheet.';
 						}
-						callback(columnId + rowId); 
-						return;
+						return callback(columnId + rowId); 
 					}
-				};
+				}
+
+				return 'Error: Phone number does not exist in spreadsheet.';
 			} else {
-				console.log('No rows returned on query for phone number');
+				return 'Error: No phone numbers were found.'
 			}
 		});
 	});
@@ -77,11 +77,11 @@ getCellValue = function(cellLocation, callback) {
 			spreadsheetId: '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4',
 			range: 'Meters!' + cellLocation,
 		}, (err, res) => {
-			if (err) return console.log('The API returned an error: ' + err);
+			if (err) return err;
 			if (!res.data.values) {
-				callback(0);
+				return callback(0);
 			} else {
-				callback(res.data.values[0][0]);
+				return callback(res.data.values[0][0]);
 			}
 		});
 	});
@@ -103,14 +103,16 @@ writeCellValue = function(cellLocation, value) {
 			resource: {
 				values: [[value]]
 			}
-		}, (err) => {
-			if (err) return console.log('The API returned an error: ' + err);
+		}, (err, res) => {
+			if (err) return err;
+
+			return 'Success';
 		});
 	});
 }
 
 updateCell = function(phoneNumber, value) {
-	getCellLocation(
+	return getCellLocation(
 		phoneNumber,
 		(cellLocation) => getCellValue(cellLocation,
 			(existingValue) => {
@@ -122,79 +124,76 @@ updateCell = function(phoneNumber, value) {
 }
 
 resetCell = function(phoneNumber) {
-	getCellLocation(
+	return getCellLocation(
 		phoneNumber,
 		(cellLocation) => writeCellValue(cellLocation, '0')
 	);
 }
 
 var colMap = {
-	'Nov 02' : 'F',
-	'Nov 03' : 'F',
-	'Nov 04' : 'F',
-	'Nov 05' : 'F',
-	'Nov 06' : 'G',
-	'Nov 07' : 'H',
-	'Nov 08' : 'I',
-	'Nov 09' : 'J',
-    'Nov 10' : 'K',
-	'Nov 11' : 'L',
-	'Nov 12' : 'M',
-	'Nov 13' : 'N',
-	'Nov 14' : 'O',
-	'Nov 15' : 'P',
-	'Nov 16' : 'Q',
-	'Nov 17' : 'R',
-	'Nov 18' : 'S',
-	'Nov 19' : 'T',
-	'Nov 20' : 'U',
-	'Nov 21' : 'V',
-	'Nov 22' : 'W',
-	'Nov 23' : 'X',
-	'Nov 24' : 'Y',
-	'Nov 25' : 'Z',
-	'Nov 26' : 'AA',
-	'Nov 27' : 'AB',
-	'Nov 28' : 'AC',
-	'Nov 29' : 'AD',
-	'Nov 30' : 'AE',
-	'Dec 01' : 'AF',
-	'Dec 02' : 'AG',
-	'Dec 03' : 'AH',
-	'Dec 04' : 'AI',
-	'Dec 05' : 'AJ',
-	'Dec 06' : 'AK',
-	'Dec 07' : 'AL',
-	'Dec 08' : 'AM',
-	'Dec 09' : 'AN',
-	'Dec 10' : 'AO',
-	'Dec 11' : 'AP',
-	'Dec 12' : 'AQ',
-	'Dec 13' : 'AR',
-	'Dec 14' : 'AS',
-	'Dec 15' : 'AT',
-	'Dec 16' : 'AU',
-	'Dec 17' : 'AV',
-	'Dec 18' : 'AW',
-	'Dec 19' : 'AX',
-	'Dec 20' : 'AY',
-	'Dec 21' : 'AZ',
-	'Dec 22' : 'BA',
-	'Dec 23' : 'BB',
-	'Dec 24' : 'BC',
-	'Dec 25' : 'BD',
-	'Dec 26' : 'BE',
-	'Dec 27' : 'BF',
-	'Dec 28' : 'BG',
-	'Dec 29' : 'BH',
-	'Dec 30' : 'BI',
-	'Dec 31' : 'BJ',
-	'Jan 01' : 'BK',
-	'Jan 02' : 'BL',
-	'Jan 03' : 'BM',
-	'Jan 04' : 'BN',
-	'Jan 05' : 'BO',
-	'Jan 06' : 'BO'
+	'11/5/2018' : 'F',
+	'11/6/2018' : 'G',
+	'11/7/2018' : 'H',
+	'11/8/2018' : 'I',
+	'11/9/2018' : 'J',
+    '11/10/2018' : 'K',
+	'11/11/2018' : 'L',
+	'11/12/2018' : 'M',
+	'11/13/2018' : 'N',
+	'11/14/2018' : 'O',
+	'11/15/2018' : 'P',
+	'11/16/2018' : 'Q',
+	'11/17/2018' : 'R',
+	'11/18/2018' : 'S',
+	'11/19/2018' : 'T',
+	'11/20/2018' : 'U',
+	'11/21/2018' : 'V',
+	'11/22/2018' : 'W',
+	'11/23/2018' : 'X',
+	'11/24/2018' : 'Y',
+	'11/25/2018' : 'Z',
+	'11/26/2018' : 'AA',
+	'11/27/2018' : 'AB',
+	'11/28/2018' : 'AC',
+	'11/29/2018' : 'AD',
+	'11/30/2018' : 'AE',
+	'12/1/2018' : 'AF',
+	'12/2/2018' : 'AG',
+	'12/3/2018' : 'AH',
+	'12/4/2018' : 'AI',
+	'12/5/2018' : 'AJ',
+	'12/6/2018' : 'AK',
+	'12/7/2018' : 'AL',
+	'12/8/2018' : 'AM',
+	'12/9/2018' : 'AN',
+	'12/10/2018' : 'AO',
+	'12/11/2018' : 'AP',
+	'12/12/2018' : 'AQ',
+	'12/13/2018' : 'AR',
+	'12/14/2018' : 'AS',
+	'12/15/2018' : 'AT',
+	'12/16/2018' : 'AU',
+	'12/17/2018' : 'AV',
+	'12/18/2018' : 'AW',
+	'12/19/2018' : 'AX',
+	'12/20/2018' : 'AY',
+	'12/21/2018' : 'AZ',
+	'12/22/2018' : 'BA',
+	'12/23/2018' : 'BB',
+	'12/24/2018' : 'BC',
+	'12/25/2018' : 'BD',
+	'12/26/2018' : 'BE',
+	'12/27/2018' : 'BF',
+	'12/28/2018' : 'BG',
+	'12/29/2018' : 'BH',
+	'12/30/2018' : 'BI',
+	'12/31/2018' : 'BJ',
+	'1/1/2019' : 'BK',
+	'1/2/2019' : 'BL',
+	'1/3/2019' : 'BM',
+	'1/4/2019' : 'BN',
+	'1/5/2019' : 'BO',
+	'1/6/2019' : 'BO'
 }
 
 module.exports = {

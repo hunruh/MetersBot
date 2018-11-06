@@ -49,7 +49,7 @@ function messageParse(message){
 			const heartRate = parseFloat(parsedMessage[1]); 
 			const duration = parsedMessage[2].replace('min','');
 			if(heartRate < 75) {
-				const equivalentDistance = parseInt(parseInt(duration) * 166); 
+				const equivalentDistance = parseInt(parseInt(duration) * 167); 
 				return messageParse(String(equivalentDistance));
 			}
 			else {
