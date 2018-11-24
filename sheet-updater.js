@@ -13,6 +13,10 @@ const jwtClient = new google.auth.JWT(
 	null
 );
 
+// Meters spreadsheet details
+const spreadsheetId = '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4';
+const spreadsheetName = 'Meters';
+
 /**
  * Get the column in the spreadsheet correlating to the current date
  */
@@ -37,8 +41,8 @@ getCellLocation = function(phoneNumber, callback) {
 		const sheets = google.sheets({version: 'v4'});
 		sheets.spreadsheets.values.get({
 			auth: jwtClient,
-			spreadsheetId: '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4',
-			range: 'Meters!B8:B48'
+			spreadsheetId: spreadsheetId,
+			range: spreadsheetName + '!B8:B48'
 		}, (err, res) => {
 			if (err) return err;
 
@@ -79,8 +83,8 @@ getCellValue = function(cellLocation, callback) {
 		const sheets = google.sheets({version: 'v4'});
 		sheets.spreadsheets.values.get({
 			auth: jwtClient,
-			spreadsheetId: '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4',
-			range: 'Meters!' + cellLocation,
+			spreadsheetId: spreadsheetId,
+			range: spreadsheetName + '!' + cellLocation,
 		}, (err, res) => {
 			if (err) return err;
 			if (!res.data.values) {
@@ -107,8 +111,8 @@ writeCellValue = function(cellLocation, value) {
 		const sheets = google.sheets({version: 'v4'});
 		sheets.spreadsheets.values.update({
 			auth: jwtClient,
-			spreadsheetId: '1vVfhQ5ln7YzWYDiGwYH-cslW4gT_B8Uaa3f89HrYTQ4',
-			range: 'Meters!' + cellLocation,
+			spreadsheetId: spreadsheetId,
+			range: spreadsheetName + '!' + cellLocation,
 			valueInputOption: 'USER_ENTERED',
 			resource: {
 				values: [[value]]
