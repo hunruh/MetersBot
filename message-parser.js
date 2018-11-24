@@ -3,6 +3,11 @@ const RESET_COMMAND = 'reset';
 const STATS_COMMAND = 'stats';
 const ERROR = 'error';
 
+/**
+ * Parse an integer from the message into a usable value
+ * @param {string} value the number to be parsed
+ * @returns {number} an integer representation of the input (or NaN if not a number)
+ */
 function filterInt(value) { 
 	if(/^(\-|\+)?([0-9]+|Infinity)$/.test(value)){
 		return Number(value);
@@ -11,7 +16,11 @@ function filterInt(value) {
 	return NaN; 
 }
 
-//used to parse incoming messages and generate meaningful commands
+/**
+ * Parse a message and generate the appropriate command
+ * @param {string} message the message to be parsed
+ * @returns {list} the action to be taken (at index 0) and relevant parameters
+ */
 function messageParse(message){
     const parsedMessage = message.toLowerCase().trim().replace(/\s\s+/g, ' ').split(' '); 
     const kNotationPattern = new RegExp('[0-9]+k?');

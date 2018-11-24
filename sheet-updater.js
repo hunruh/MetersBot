@@ -23,9 +23,9 @@ function findCol() {
 }
 
 /**
- * Get the row in the spreadsheet correlating to the origin phone number
+ * Get the cell location in the spreadsheet correlating to the origin phone number
  * @param {string} phoneNumber origin number to query on
- * @param {function} callback function to be called with row result
+ * @param {function} callback function to be called with cell location result
  */
 getCellLocation = function(phoneNumber, callback) {
 	jwtClient.authorize((authErr) => {
@@ -64,6 +64,11 @@ getCellLocation = function(phoneNumber, callback) {
 	});
 }
 
+/**
+ * Get the value of a cell in the spreadsheet
+ * @param {string} cellLocation the location within the 'Meters' spreadsheet
+ * @param {function} callback function to be called with value result
+ */
 getCellValue = function(cellLocation, callback) {
 	jwtClient.authorize((authErr) => {
 		if (authErr) {
@@ -87,6 +92,11 @@ getCellValue = function(cellLocation, callback) {
 	});
 }
 
+/**
+ * Write a value to the spreadsheet
+ * @param {string} the location within the 'Meters' spreadsheet to update
+ * @param {string} the value to write to the specified cell
+ */
 writeCellValue = function(cellLocation, value) {
 	jwtClient.authorize((authErr) => {
 		if (authErr) {
@@ -111,6 +121,12 @@ writeCellValue = function(cellLocation, value) {
 	});
 }
 
+/**
+ * Helper (and exportable) function to chain together the operations for fetching
+ * a cell location from the spreadsheet and updating it
+ * @param {string} phoneNumber the number of the requester
+ * @param {string} value the value to write in the appropriate cell (per phone number and date)
+ */
 updateCell = function(phoneNumber, value) {
 	return getCellLocation(
 		phoneNumber,
@@ -123,6 +139,10 @@ updateCell = function(phoneNumber, value) {
 	);
 }
 
+/**
+ * Helper (and exportable) function to chain together the operations for zeroing out a cell
+ * @param {string} phoneNumber the number of the requester
+ */
 resetCell = function(phoneNumber) {
 	return getCellLocation(
 		phoneNumber,
