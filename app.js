@@ -58,7 +58,7 @@ function execute(originPhoneNumber, request){
 		}
 	}
 	else if (request[0] == parser.RESET_COMMAND) {
-		sheetUpdater.resetCell(originPhoneNumber, cellLocation);
+		sheetUpdater.resetCell(originPhoneNumber);
 		return 'Your meters for today have been set to 0';
 	}
 	else if (request[0] == parser.STATS_COMMAND) {
