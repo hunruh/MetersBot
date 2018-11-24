@@ -1,10 +1,10 @@
 const bodyParser = require('body-parser');
+const fs = require('fs');
 const express = require('express');
 const twilio = require('twilio');
 
-const twilioAccountSid = 'ACe6a1a777cc67750ff7e84f03b89006f2';
-const twilioAuthToken = 'd45318fa3e944ac0c0f81bebbcb7c743';
-const client = twilio(twilioAccountSid, twilioAuthToken);
+const twilioCredentials = JSON.parse(fs.readFileSync('twilio-creds.json'));
+const client = twilio(twilioCredentials.account_sid, twilioCredentials.auth_token);
 
 const parser = require('./message-parser');
 const sheetUpdater = require('./sheet-updater');
